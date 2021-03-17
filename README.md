@@ -2,5 +2,5 @@
 
 ## FUNTION LIST 📋
 
-- [x] findContours
-- [ ] approxPolyDP
+- [x] drawContours
+- [x] approxPolyDP
