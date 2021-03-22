@@ -4,3 +4,4 @@
 
 - [x] drawContours
 - [x] approxPolyDP
+- [ ] HoughLines, HoughLinesP
