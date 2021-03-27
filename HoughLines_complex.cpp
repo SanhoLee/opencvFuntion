@@ -11,9 +11,13 @@ Mat img, imgEdge;
 String imgPath = "data/complex.png";
 
 // Hough Tranform Variables.
-double rho_thres = 1;
-double theta_thres = 1 * (CV_PI / 180);
-int ptr_votes_thres = 40;
+int rho_unit = 1;
+int theta_degree_unit = 1;
+int ptr_votes_thres = 20;
+double toRadian = (CV_PI / 180);
+double toDegree = 1 / toRadian;
+
+int rtnWaitKey = 0;
 
 int isEmptyImg(Mat img)
 {
@@ -24,7 +28,7 @@ int isEmptyImg(Mat img)
     }
     else
     {
-        cout << " SUCCESS::IMG LOADING " << endl;
+        // cout << " SUCCESS::IMG LOADING " << endl;
         return 0;
     }
 }
@@ -71,12 +75,12 @@ void drawHoughLines(vector<Vec2f> lines)
         pt2.y = y0 - dL * a;
 
         // 검출된 라인의 속성 값(rho, theta)과 해당 직선의 포인트 값을 출력.
-        cout << "line " << i + 1
-             << "->> rho : " << lines[i][0] << "px, \t"
-             << " theta : " << lines[i][1] * (180 / CV_PI)
-             << "\t Point1(x,y) : " << pt1.x << "\t ," << pt1.y
-             << "\t Point2(x,y) : " << pt2.x << "\t ," << pt2.y
-             << endl;
+        // cout << "line " << i + 1
+        //      << "->> rho : " << lines[i][0] << "px, \t"
+        //      << " theta : " << lines[i][1] * (180 / CV_PI)
+        //      << "\t Point1(x,y) : " << pt1.x << "\t ," << pt1.y
+        //      << "\t Point2(x,y) : " << pt2.x << "\t ," << pt2.y
+        //      << endl;
 
         // 원본 이미지에 검출된 직선을 그림.
         line(img, pt1, pt2, Scalar(0, 0, 200), 3, LINE_AA);
@@ -90,25 +94,55 @@ void showInformation(Mat img, vector<Vec2f> lines)
     cout << "lines : " << lines.size() << endl;
 };
 
-int main()
+void showCurrentParmas(double rho_px, double theta_radian, int ptr_votes_thres)
 {
-    img = imread(imgPath);
-    isEmptyImg(img);
+    cout << ">>  rho_px / theta_degree / votes : \t"
+         << rho_px << "\t" << theta_radian * toDegree << "\t" << ptr_votes_thres << endl;
+};
 
-    // 1. preprocessing img.
-    imgEdge = preProcessing(img);
+int main(int argc, char **argv)
+{
+    // 0. handle Window Trackbar...
+    //namedWindow(윈도우 이름, 윈도우 사이즈 조절);
+    namedWindow("Trackbars", WINDOW_NORMAL);
+    resizeWindow("Trackbars", Size(600, 200));
 
-    // 2. Hough line Transform
+    // 트랙바 조절에 따른 값 변화
+    // rho 1 unit -> 0.2px 증감
+    // theta 1 unit -> 0.1degree 증감
+    // pixel vote 1 unit -> 1 vote 증감
+    createTrackbar("Rho unit", "Trackbars", &rho_unit, 20);
+    createTrackbar("theta unit", "Trackbars", &theta_degree_unit, 50);
+    createTrackbar("min vote unit", "Trackbars", &ptr_votes_thres, 100);
+
     // float 값 두개를 가지는 lines 벡터 변수 선언.
     vector<Vec2f> lines;
 
-    HoughLines(imgEdge, lines, rho_thres, theta_thres, ptr_votes_thres);
-    showInformation(imgEdge, lines);
-    drawHoughLines(lines);
+    while (true)
+    {
+        img = imread(imgPath);
+        isEmptyImg(img);
 
-    imshow("img", img);
-    imwrite("data/output/HoughLines_ini.png", img);
-    waitKey(0);
+        /* 1. preprocessing img. */
+        imgEdge = preProcessing(img);
 
-    return 0;
+        /* 2. Hough line Transform
+
+         1 unit parameter converts for Houghlines function.*/
+        double rho_px = double(rho_unit) / 5;
+        double theta_radian = (double(theta_degree_unit) / 10) * toRadian;
+
+        HoughLines(imgEdge, lines, rho_px, theta_radian, ptr_votes_thres);
+        showCurrentParmas(rho_px, theta_radian, ptr_votes_thres);
+        drawHoughLines(lines);
+
+        imshow("img", img);
+        rtnWaitKey = waitKey(1);
+        // imwrite("data/output/HoughLines_complex.png", img);
+
+        if (rtnWaitKey == 27)
+        {
+            return 0;
+        }
+    }
 }
