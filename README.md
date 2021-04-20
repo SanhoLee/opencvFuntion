@@ -5,3 +5,4 @@
 - [x] drawContours
 - [x] approxPolyDP
 - [x] HoughLines, HoughLinesP
+- [ ] fillPoly and bitwise_and
